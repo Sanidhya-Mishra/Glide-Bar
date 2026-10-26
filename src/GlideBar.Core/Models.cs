@@ -48,6 +48,37 @@ public sealed record SearchResult
     public DateTimeOffset? Modified { get; init; }
 }
 
+/// <summary>Playback state of a media session, mirroring the SMTC status values.</summary>
+public enum MediaPlaybackState { Unknown, Closed, Opened, Changing, Stopped, Playing, Paused }
+
+/// <summary>
+/// An immutable snapshot of one active media session (one app currently holding/playing media), as
+/// surfaced by the Windows System Media Transport Controls. Artwork is raw encoded image bytes so
+/// Core stays UI-framework-free (the App turns it into an <c>ImageSource</c>). A new instance is
+/// produced whenever anything changes.
+/// </summary>
+public sealed record MediaSessionInfo
+{
+    /// <summary>Stable key for the session (the source app's AUMID). Used to reconcile updates.</summary>
+    public string SessionId { get; init; } = "";
+    /// <summary>Raw source-app user-model id (AUMID).</summary>
+    public string AppId { get; init; } = "";
+    /// <summary>Best-effort friendly app name derived from the AUMID (e.g. "Spotify").</summary>
+    public string AppDisplayName { get; init; } = "";
+    public string Title { get; init; } = "";
+    public string Artist { get; init; } = "";
+    public string Album { get; init; } = "";
+    public MediaPlaybackState State { get; init; }
+    public bool IsPlaying => State == MediaPlaybackState.Playing;
+    public TimeSpan Position { get; init; }
+    public TimeSpan Duration { get; init; }
+    public bool CanPlayPause { get; init; }
+    public bool CanNext { get; init; }
+    public bool CanPrevious { get; init; }
+    /// <summary>Album/track artwork as encoded image bytes (PNG/JPEG), or null when none is exposed.</summary>
+    public byte[]? Artwork { get; init; }
+}
+
 /// <summary>Where the bar lives + how it is oriented. Persisted across sessions.</summary>
 public sealed record BarPlacement
 {

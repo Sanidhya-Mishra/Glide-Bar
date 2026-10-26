@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- The 10.0.19041.0 platform version projects the WinRT System Media Transport Controls
+         (Windows.Media.Control). Min OS is still Windows 10 1809+; 19041 is just the SDK surface. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GlideBar.Core\GlideBar.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- DI registration (AddGlideBarMedia). -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+  </ItemGroup>
+
+</Project>

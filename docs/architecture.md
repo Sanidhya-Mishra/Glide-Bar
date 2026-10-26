@@ -10,7 +10,11 @@ Deeper technical detail behind [`../PLAN.md`](../PLAN.md). Recommended stack: **
 | `GlideBar.HardwareMonitor` | classlib | Core | Metrics (perf counters + LibreHardwareMonitor) |
 | `GlideBar.Search` | classlib | Core | File search providers + launcher |
 | `GlideBar.Storage` | classlib | Core | JSON settings + pinned-item persistence |
+| `GlideBar.Media` | classlib | Core | Media sessions via SMTC (`IMediaController`) |
 | `GlideBar.App` | WPF exe | Core + all services (DI) | Overlay window, interaction, tray, views, theme |
+
+`GlideBar.Media` and `GlideBar.App` target `net10.0-windows10.0.19041.0` (the WinRT projection needed
+for the System Media Transport Controls); the other projects stay on `net10.0` / `net10.0-windows`.
 
 ## Metrics: layered, cheap-first
 
@@ -25,6 +29,19 @@ Deeper technical detail behind [`../PLAN.md`](../PLAN.md). Recommended stack: **
 
 Polling is driven by one shared timer that only runs while the bar is visible. When hidden, the provider
 stops the timer entirely (no background sampling), which is the core of the low-idle-cost guarantee.
+
+## Media sessions (Now Playing)
+
+`IMediaController` (impl `GlideBar.Media.SystemMediaController`) wraps the **System Media Transport
+Controls**: `GlobalSystemMediaTransportControlsSessionManager.RequestAsync()` enumerates every app
+holding a media session (Spotify, browsers, local players). Per session we read title/artist/album,
+the artwork thumbnail (`IRandomAccessStreamReference` → bytes), playback status + available controls,
+and timeline position/duration; transport is relayed via `TryTogglePlayPause/SkipNext/SkipPrevious`.
+
+Like metrics, it is **lifecycle-bound**: `Start()` only while the Control Center is open (hooks SMTC
+change events + a 1 s timeline-refresh timer), `Stop()` on close unhooks everything → ~0 idle cost.
+Full metadata/artwork is rebuilt only on change events; the timer refreshes just position/playback.
+Notifications are **not** sourced here — `UserNotificationListener` needs MSIX packaging (future work).
 
 ## File search
 

@@ -80,9 +80,21 @@ internal sealed class TrayIcon : IDisposable
         return menu;
     }
 
-    /// <summary>Renders a simple indigo "G" tile via H.NotifyIcon's generator (no .ico asset needed).</summary>
+    /// <summary>Uses the app's embedded GlideBar icon for the tray; falls back to a generated
+    /// indigo "G" tile if the exe icon can't be read.</summary>
     private static System.Drawing.Icon? BuildIcon()
     {
+        try
+        {
+            var exe = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(exe))
+            {
+                var ico = System.Drawing.Icon.ExtractAssociatedIcon(exe);
+                if (ico is not null) return ico;
+            }
+        }
+        catch { /* fall through to the generated glyph */ }
+
         try
         {
             var gen = new GeneratedIconSource

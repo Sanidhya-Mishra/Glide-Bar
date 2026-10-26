@@ -2,6 +2,7 @@ using GlideBar.App.Services;
 using GlideBar.App.ViewModels;
 using GlideBar.App.Views;
 using GlideBar.HardwareMonitor;
+using GlideBar.Media;
 using GlideBar.Search;
 using GlideBar.Storage;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,7 @@ internal static class CompositionRoot
         services.AddGlideBarHardwareMonitor();
         services.AddGlideBarSearch();
         services.AddGlideBarStorage();
+        services.AddGlideBarMedia();            // -> IMediaController (SMTC Now Playing)
         // -------------------------------------------------------------------------------
         //  END INTEGRATION SEAM
         // -------------------------------------------------------------------------------
@@ -50,6 +52,8 @@ internal static class CompositionRoot
         services.AddSingleton<VitalsViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<AppPickerViewModel>();
+        services.AddSingleton<MediaViewModel>();
+        services.AddSingleton<NotificationsViewModel>();
         services.AddSingleton<BarViewModel>();
 
         // ---- Windows ------------------------------------------------------------------

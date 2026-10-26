@@ -39,6 +39,7 @@ tight typographic hierarchy, restrained accent color, semantic colors only for l
 | 7 | "mordern and minimalitic"                          | Acrylic/mica surface, rounded, minimal, dark + light theme |
 | 8 | "not heavy ... CPU and GPU ... run in background"  | Perf-counter-first metrics, polling paused when hidden, tray-resident, no busy loops |
 | 9 | "PC Notification bar similar to Mobile"             | Collapsed sliver → expands into a control/notification-style panel |
+| 10 | "see the music playing apps and what music it is playing" | **Now Playing (Control Center):** a flyout listing every media app (Spotify, browser, local) with artwork, title/artist, progress and play/pause · next/previous, via the Windows System Media Transport Controls. Includes a notifications section (scaffolded). |
 
 ---
 

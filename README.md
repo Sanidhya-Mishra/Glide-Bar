@@ -9,9 +9,10 @@ notification/control hot bar.
 
 ## Updates
 
-**Latest: [v1.1.0](https://github.com/Sanidhya-Mishra/Glide-Bar/releases/latest)** — Pinned tiles now
-show each app/file's real Windows icon (no more generic placeholder), and shortcut (`.lnk`) icons
-render crisply without the shortcut-arrow overlay.
+**Latest: [v1.2.0](https://github.com/Sanidhya-Mishra/Glide-Bar/releases/latest)** — New **Now Playing**
+control center: click the grip line on the bar to see every app playing media (Spotify, a browser, a
+local player) with artwork, title/artist, progress and play/pause · next/previous — opening with a
+smooth animation and placing itself correctly at any screen edge.
 
 📦 **[Download the latest release](https://github.com/Sanidhya-Mishra/Glide-Bar/releases/latest)**
 (one-click installer or portable `.exe`) · 📋 [All releases](https://github.com/Sanidhya-Mishra/Glide-Bar/releases)
@@ -21,6 +22,7 @@ render crisply without the shortcut-arrow overlay.
 - 🔍 Instant file / folder / app search → open or reveal
 - 📌 Pin shortcuts for one-click access (no File Explorer needed)
 - 📊 Live CPU %, RAM, GPU %, and CPU/GPU temperature
+- 🎵 **Now Playing** — see every app playing media (Spotify, browser, local files) with artwork and play/pause · next/previous, in a new Control Center flyout
 - 🖱️ Reveals on hover; drag it to any edge or corner, on any monitor
 - 🪶 Low CPU/GPU footprint; tray-resident; polling pauses when hidden
 - 🎨 Modern, minimal; dark + light themes

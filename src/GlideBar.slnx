@@ -2,6 +2,7 @@
   <Project Path="GlideBar.App/GlideBar.App.csproj" />
   <Project Path="GlideBar.Core/GlideBar.Core.csproj" />
   <Project Path="GlideBar.HardwareMonitor/GlideBar.HardwareMonitor.csproj" />
+  <Project Path="GlideBar.Media/GlideBar.Media.csproj" />
   <Project Path="GlideBar.Search/GlideBar.Search.csproj" />
   <Project Path="GlideBar.Storage/GlideBar.Storage.csproj" />
 </Solution>

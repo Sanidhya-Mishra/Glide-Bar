@@ -27,6 +27,31 @@ public interface IMetricsProvider : IDisposable
     Task<bool> TryEnableTemperaturesAsync(CancellationToken ct = default);
 }
 
+/// <summary>
+/// Surfaces the OS media sessions (Spotify, browsers, local players…) via the Windows System Media
+/// Transport Controls, and relays transport commands back to them. Like <see cref="IMetricsProvider"/>,
+/// implementations MUST stop all listening/timers when <see cref="Stop"/> is called (the bar does this
+/// whenever the Control Center closes), so idle cost is ~0.
+/// </summary>
+public interface IMediaController : IDisposable
+{
+    /// <summary>Current sessions, most-relevant (current) first. Empty when nothing is playing.</summary>
+    IReadOnlyList<MediaSessionInfo> Sessions { get; }
+    bool IsRunning { get; }
+
+    /// <summary>Raised whenever the set of sessions, their metadata, or playback position changes
+    /// (on a background thread — marshal before touching UI).</summary>
+    event EventHandler? SessionsChanged;
+
+    void Start();
+    void Stop();
+
+    /// <summary>Toggle play/pause on the session with the given <see cref="MediaSessionInfo.SessionId"/>.</summary>
+    Task PlayPauseAsync(string sessionId);
+    Task NextAsync(string sessionId);
+    Task PreviousAsync(string sessionId);
+}
+
 /// <summary>Finds files/folders/apps. Multiple providers may exist (Everything, Windows Search…).</summary>
 public interface ISearchProvider
 {

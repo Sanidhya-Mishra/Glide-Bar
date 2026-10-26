@@ -79,6 +79,77 @@ public sealed class FakeMetricsProvider : IMetricsProvider
     public void Dispose() => Stop();
 }
 
+/// <summary>Emits two advancing media sessions on a timer, so the Control Center works in dev.</summary>
+public sealed class FakeMediaController : IMediaController
+{
+    private readonly object _gate = new();
+    private Timer? _timer;
+    private int _tick;
+
+    private static readonly (string App, string AppName, string Title, string Artist, string Album, int Dur)[] Seed =
+    {
+        ("Spotify.exe", "Spotify", "Midnight City", "M83", "Hurry Up, We're Dreaming", 238),
+        ("Microsoft.Media.Player", "Media Player", "Feather", "Nujabes", "Modal Soul", 402),
+    };
+
+    public IReadOnlyList<MediaSessionInfo> Sessions { get; private set; } = Array.Empty<MediaSessionInfo>();
+    public bool IsRunning { get; private set; }
+    public event EventHandler? SessionsChanged;
+
+    public void Start()
+    {
+        lock (_gate)
+        {
+            if (IsRunning) return;
+            IsRunning = true;
+            _timer = new Timer(_ => Sample(), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        }
+    }
+
+    public void Stop()
+    {
+        lock (_gate)
+        {
+            IsRunning = false;
+            _timer?.Dispose();
+            _timer = null;
+            Sessions = Array.Empty<MediaSessionInfo>();
+        }
+        SessionsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public Task PlayPauseAsync(string sessionId) => Task.CompletedTask;
+    public Task NextAsync(string sessionId) => Task.CompletedTask;
+    public Task PreviousAsync(string sessionId) => Task.CompletedTask;
+
+    private void Sample()
+    {
+        var t = Interlocked.Increment(ref _tick);
+        Sessions = Seed.Select((s, i) =>
+        {
+            int pos = (t + i * 40) % s.Dur;
+            return new MediaSessionInfo
+            {
+                SessionId = s.App,
+                AppId = s.App,
+                AppDisplayName = s.AppName,
+                Title = s.Title,
+                Artist = s.Artist,
+                Album = s.Album,
+                State = i == 0 ? MediaPlaybackState.Playing : MediaPlaybackState.Paused,
+                Position = TimeSpan.FromSeconds(pos),
+                Duration = TimeSpan.FromSeconds(s.Dur),
+                CanPlayPause = true,
+                CanNext = true,
+                CanPrevious = true,
+            };
+        }).ToList();
+        SessionsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Dispose() => Stop();
+}
+
 /// <summary>Filters a small sample set so the search box works in dev.</summary>
 public sealed class FakeSearchProvider : ISearchProvider
 {

@@ -3,6 +3,22 @@
 All notable changes to GlideBar are documented here. This project follows
 [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
 
+## [1.2.0] — 2026-10-27
+
+### Added
+- **Now Playing (Control Center).** A new flyout, opened by clicking a thin grip line on the bar
+  (it drops in and out with a scale + fade animation), shows every app currently playing media — Spotify, a browser, a local player — as a card with
+  album art, app name, title/artist, a progress indicator, and play/pause · next/previous
+  controls. Powered by the Windows System Media Transport Controls (SMTC); no per-app integration.
+  Listening starts only while the panel is open and fully stops on close (same ~0-idle contract as
+  the vitals poller). New `GlideBar.Media` project + `IMediaController`; UI lives in self-contained
+  `ControlCenterPanel` / `NowPlayingCard` components. See
+  [`docs/design-spec-nowplaying.md`](docs/design-spec-nowplaying.md).
+- The Control Center also hosts a pinned apps/folders quick row and a **Notifications** section
+  (scaffolded with a not-yet-available state; live mirroring needs MSIX packaging).
+- **App icon.** GlideBar now embeds its own icon (the glide-arrow logo), so Start-menu / desktop
+  shortcuts, Programs & Features, and the tray show the real icon instead of a generic placeholder.
+
 ## [1.1.0] — 2026-10-26
 
 ### Added

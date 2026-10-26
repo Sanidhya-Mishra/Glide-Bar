@@ -22,6 +22,7 @@ public sealed partial class BarViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _isPinnedOpen;      // keeps it expanded regardless of hover
     [ObservableProperty] private bool _isSettingsOpen;
     [ObservableProperty] private bool _isAddOpen;
+    [ObservableProperty] private bool _isControlCenterOpen;
     [ObservableProperty] private bool _isMonitoringPaused;
     [ObservableProperty] private bool _reduceEffects;
     [ObservableProperty] private BarOrientation _orientation = BarOrientation.Horizontal;
@@ -31,6 +32,8 @@ public sealed partial class BarViewModel : ObservableObject, IDisposable
     public VitalsViewModel Vitals { get; }
     public SettingsViewModel SettingsPanel { get; }
     public AppPickerViewModel AppPicker { get; }
+    public MediaViewModel Media { get; }
+    public NotificationsViewModel Notifications { get; }
 
     public bool IsHorizontal => Orientation == BarOrientation.Horizontal;
     public bool IsVertical => Orientation == BarOrientation.Vertical;
@@ -47,7 +50,9 @@ public sealed partial class BarViewModel : ObservableObject, IDisposable
         PinsViewModel pins,
         VitalsViewModel vitals,
         SettingsViewModel settingsPanel,
-        AppPickerViewModel appPicker)
+        AppPickerViewModel appPicker,
+        MediaViewModel media,
+        NotificationsViewModel notifications)
     {
         _metrics = metrics;
         _settings = settings;
@@ -56,6 +61,8 @@ public sealed partial class BarViewModel : ObservableObject, IDisposable
         Vitals = vitals;
         SettingsPanel = settingsPanel;
         AppPicker = appPicker;
+        Media = media;
+        Notifications = notifications;
         AppPicker.CloseRequested += (_, _) => IsAddOpen = false;
 
         Vitals.ApplyCapabilities(_metrics.Capabilities);
@@ -94,9 +101,29 @@ public sealed partial class BarViewModel : ObservableObject, IDisposable
         {
             IsSettingsOpen = false;
             IsAddOpen = false;
+            IsControlCenterOpen = false; // also stops media listening via OnIsControlCenterOpenChanged
             Search.IsFieldOpen = false;
             Search.Clear();
         }
+    }
+
+    /// <summary>Open/close the Control Center (Now Playing + notifications). Media listening follows
+    /// the open state (perf contract — nothing runs while it's closed).</summary>
+    [RelayCommand]
+    private void ToggleControlCenter()
+    {
+        IsControlCenterOpen = !IsControlCenterOpen;
+        if (IsControlCenterOpen)
+        {
+            IsSettingsOpen = false;
+            IsAddOpen = false;
+        }
+    }
+
+    partial void OnIsControlCenterOpenChanged(bool value)
+    {
+        if (value) Media.Start();
+        else Media.Stop();
     }
 
     public void TogglePinnedOpen() => IsPinnedOpen = !IsPinnedOpen;
@@ -146,5 +173,6 @@ public sealed partial class BarViewModel : ObservableObject, IDisposable
     {
         _metrics.SampleProduced -= OnSampleProduced;
         _metrics.Stop();
+        Media.Dispose();
     }
 }

@@ -1,0 +1,117 @@
+<UserControl x:Class="GlideBar.App.Views.NowPlayingCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GlideBar.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:MediaSessionViewModel}"
+             FontFamily="Segoe UI Variable Text, Segoe UI">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="B2V"/>
+    </UserControl.Resources>
+
+    <!-- One media session: album art · app + title + artist · progress · transport -->
+    <Border Background="{DynamicResource FieldBrush}" CornerRadius="13" Padding="12"
+            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top: artwork + metadata -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Album art (rounded), with a gradient + music-note fallback -->
+                <Grid Grid.Column="0" Width="64" Height="64">
+                    <Border CornerRadius="10">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="{DynamicResource AccentColor}" Offset="0"/>
+                                <GradientStop Color="#8A5CF6" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Path Data="{StaticResource IconMusicNote}" Stretch="Uniform" Width="24" Height="24"
+                              Fill="#E6FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"
+                              Visibility="{Binding HasArtwork, Converter={StaticResource InverseB2V}}"/>
+                    </Border>
+                    <Border CornerRadius="10" Visibility="{Binding HasArtwork, Converter={StaticResource B2V}}">
+                        <Border.Background>
+                            <ImageBrush ImageSource="{Binding Artwork}" Stretch="UniformToFill"/>
+                        </Border.Background>
+                    </Border>
+                </Grid>
+
+                <!-- Metadata -->
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,1">
+                        <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentBrush}" Margin="0,0,6,0"
+                                 VerticalAlignment="Center"
+                                 Visibility="{Binding IsPlaying, Converter={StaticResource B2V}}"/>
+                        <TextBlock Text="{Binding AppName}" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextPrimaryBrush}"
+                               FontSize="14.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding Title}"/>
+                    <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontSize="12.5" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"
+                               ToolTip="{Binding Subtitle}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Progress + transport -->
+            <StackPanel Grid.Row="1" Margin="0,11,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding PositionText}" Margin="0,0,9,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10.5"
+                               VerticalAlignment="Center" Typography.NumeralAlignment="Tabular"/>
+                    <ProgressBar Grid.Column="1" Style="{StaticResource GlideProgress}"
+                                 Value="{Binding Progress, Mode=OneWay}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding DurationText}" Margin="9,0,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10.5"
+                               VerticalAlignment="Center" Typography.NumeralAlignment="Tabular"/>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,9,0,0">
+                    <Button Style="{StaticResource MediaTransportButton}" Command="{Binding PreviousCommand}"
+                            IsEnabled="{Binding CanPrevious}" ToolTip="Previous" Margin="0,0,8,0">
+                        <Path Data="{StaticResource IconPrevious}" Stretch="Uniform" Width="15" Height="15"
+                              Fill="{DynamicResource TextPrimaryBrush}"/>
+                    </Button>
+                    <Button Style="{StaticResource MediaPlayButton}" Command="{Binding PlayPauseCommand}"
+                            IsEnabled="{Binding CanPlayPause}" ToolTip="Play / Pause">
+                        <Path Stretch="Uniform" Width="16" Height="16" Fill="White">
+                            <Path.Style>
+                                <Style TargetType="Path">
+                                    <Setter Property="Data" Value="{StaticResource IconPlay}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                            <Setter Property="Data" Value="{StaticResource IconPause}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Path.Style>
+                        </Path>
+                    </Button>
+                    <Button Style="{StaticResource MediaTransportButton}" Command="{Binding NextCommand}"
+                            IsEnabled="{Binding CanNext}" ToolTip="Next" Margin="8,0,0,0">
+                        <Path Data="{StaticResource IconNext}" Stretch="Uniform" Width="15" Height="15"
+                              Fill="{DynamicResource TextPrimaryBrush}"/>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

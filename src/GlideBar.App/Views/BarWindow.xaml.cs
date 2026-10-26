@@ -59,6 +59,7 @@ public partial class BarWindow : Window
         InitializeComponent();
 
         AddPopup.CustomPopupPlacementCallback = PlaceAddPopup;
+        ControlCenterPopup.CustomPopupPlacementCallback = PlaceControlCenter;
 
         _dwell = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DwellMs) };
         _dwell.Tick += (_, _) => { _dwell.Stop(); Expand(); };
@@ -95,6 +96,117 @@ public partial class BarWindow : Window
             if (e.PropertyName == nameof(VitalsViewModel.TempAvailable) && _vm.IsExpanded)
                 ApplyVisualState(animate: true);
         };
+
+        // Open/close the Control Center with a scale + fade transition.
+        _vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(BarViewModel.IsControlCenterOpen))
+                AnimateControlCenter(_vm.IsControlCenterOpen);
+        };
+    }
+
+    // ---------------------------------------------------------------------------------------
+    //  Control Center open/close transition (the popup content scales down from the bar + fades)
+    // ---------------------------------------------------------------------------------------
+    private void AnimateControlCenter(bool open)
+    {
+        if (open)
+        {
+            // Just show it — the Opened event plays the entrance so the first frame isn't dropped.
+            ControlCenterPopup.IsOpen = true;
+        }
+        else
+        {
+            if (!ControlCenterPopup.IsOpen) return;
+
+            if (_vm.ReduceEffects)
+            {
+                ControlCenterPopup.IsOpen = false;
+                return;
+            }
+
+            var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
+            var dur = TimeSpan.FromMilliseconds(140);
+            var fadeOut = new DoubleAnimation(1, 0, dur) { EasingFunction = ease };
+            fadeOut.Completed += (_, _) =>
+            {
+                ControlCenterPopup.IsOpen = false; // close only after the transition finishes
+                CCScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                CCTranslate.BeginAnimation(TranslateTransform.YProperty, null);
+                ControlCenterContent.BeginAnimation(OpacityProperty, null);
+                CCScale.ScaleY = 1; CCTranslate.Y = 0; ControlCenterContent.Opacity = 1;
+            };
+            CCScale.BeginAnimation(ScaleTransform.ScaleYProperty,
+                new DoubleAnimation(1.0, 0.97, dur) { EasingFunction = ease });
+            CCTranslate.BeginAnimation(TranslateTransform.YProperty,
+                new DoubleAnimation(0, -8, dur) { EasingFunction = ease });
+            ControlCenterContent.BeginAnimation(OpacityProperty, fadeOut);
+        }
+    }
+
+    // Play the entrance (scale + drop + fade) once the popup is actually shown.
+    private void ControlCenterPopup_Opened(object? sender, EventArgs e)
+    {
+        if (_vm.ReduceEffects)
+        {
+            CCScale.ScaleY = 1; CCTranslate.Y = 0; ControlCenterContent.Opacity = 1;
+            return;
+        }
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var dur = TimeSpan.FromMilliseconds(190);
+        CCScale.BeginAnimation(ScaleTransform.ScaleYProperty,
+            new DoubleAnimation(0.95, 1.0, dur) { EasingFunction = ease });
+        CCTranslate.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(-10, 0, dur) { EasingFunction = ease });
+        ControlCenterContent.BeginAnimation(OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160)) { EasingFunction = ease });
+    }
+
+    // Edge-aware placement for the Control Center: centred on the side of the bar that faces the
+    // screen interior — below for top/floating, above for bottom, right for a left-dock, left for a
+    // right-dock. Coordinates target the VISIBLE panel border, correcting for its uniform margin.
+    private const double CcMargin = 12; // must match ControlCenterPanel's Border Margin
+    private const double CcGap = 3;     // clearance between the bar and the panel
+
+    private CustomPopupPlacement[] PlaceControlCenter(Size popup, Size target, Point offset)
+    {
+        const double m = CcMargin, gap = CcGap;
+        double x, y;
+        PopupPrimaryAxis axis;
+        switch (_edge)
+        {
+            case BarEdge.Left:  // bar on left  -> panel to the right, vertically centred
+                x = target.Width + gap - m;
+                y = (target.Height - popup.Height) / 2;
+                axis = PopupPrimaryAxis.Vertical;
+                break;
+            case BarEdge.Right: // bar on right -> panel to the left, vertically centred
+                x = -popup.Width + m - gap;
+                y = (target.Height - popup.Height) / 2;
+                axis = PopupPrimaryAxis.Vertical;
+                break;
+            case BarEdge.Bottom: // bar on bottom -> panel above, horizontally centred
+                x = (target.Width - popup.Width) / 2;
+                y = -popup.Height + m - gap;
+                axis = PopupPrimaryAxis.Horizontal;
+                break;
+            default: // Top / floating -> panel below, horizontally centred
+                x = (target.Width - popup.Width) / 2;
+                y = target.Height + gap - m;
+                axis = PopupPrimaryAxis.Horizontal;
+                break;
+        }
+        return new[] { new CustomPopupPlacement(new Point(x, y), axis) };
+    }
+
+    // Re-run the placement callback when the bar is re-docked while the panel is open.
+    private void UpdateControlCenterPlacement()
+    {
+        if (!ControlCenterPopup.IsOpen) return;
+        double h = ControlCenterPopup.HorizontalOffset;
+        ControlCenterPopup.HorizontalOffset = h + 1;
+        ControlCenterPopup.HorizontalOffset = h;
     }
 
     // ---------------------------------------------------------------------------------------
@@ -274,6 +386,7 @@ public partial class BarWindow : Window
 
         // Keep the add panel on the interior-facing side (and sized to the bar) if re-docked while open.
         if (AddPopup.IsOpen) { SizeAddPanel(); UpdateAddPlacement(); }
+        if (ControlCenterPopup.IsOpen) UpdateControlCenterPlacement();
 
         // The visible motion is a GPU-composited scale + fade of the content, which is smooth.
         if (animate && !_vm.ReduceEffects)
@@ -348,7 +461,7 @@ public partial class BarWindow : Window
 
     private bool SearchActive =>
         !string.IsNullOrWhiteSpace(_vm.Search.Query) || _vm.Search.HasResults || _vm.IsSettingsOpen
-        || _vm.IsAddOpen || _vm.Search.IsFieldOpen;
+        || _vm.IsAddOpen || _vm.IsControlCenterOpen || _vm.Search.IsFieldOpen;
 
     public void Summon()
     {
