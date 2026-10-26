@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>GlideBar.App</RootNamespace>
     <AssemblyName>GlideBar</AssemblyName>
+    <Version>1.1.0</Version>
     <!-- Per-Monitor-V2 DPI awareness (see app.manifest). -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>

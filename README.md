@@ -7,6 +7,13 @@ notification/control hot bar.
 
 > **GlideBar** is a working name — easy to change.
 
+## Updates
+
+**Latest: v1.1.0** — Pinned tiles now show each app/file's real Windows icon (no more generic
+placeholder), and shortcut (`.lnk`) icons render crisply without the shortcut-arrow overlay.
+
+See the full version history in [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Highlights
 - 🔍 Instant file / folder / app search → open or reveal
 - 📌 Pin shortcuts for one-click access (no File Explorer needed)

@@ -140,6 +140,7 @@ internal static class NativeMethods
     public const uint SHGFI_ICON = 0x00000100;
     public const uint SHGFI_LARGEICON = 0x00000000;
     public const uint SHGFI_SMALLICON = 0x00000001;
+    public const uint SHGFI_SYSICONINDEX = 0x00004000; // return the system image-list index, not an HICON
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     public static extern IntPtr SHGetFileInfo(string pszPath, uint dwFileAttributes,
@@ -147,4 +148,21 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool DestroyIcon(IntPtr hIcon);
+
+    // System image lists — used to pull a crisp, high-resolution icon by index. Going through the
+    // image list (rather than SHGFI_ICON) also yields the *base* icon, so a .lnk shortcut's icon
+    // comes back without the shell's shortcut-arrow overlay.
+    public const int SHIL_LARGE = 0;      // 32px
+    public const int SHIL_EXTRALARGE = 2; // 48px
+    public const int SHIL_JUMBO = 4;      // 256px
+    public const uint ILD_TRANSPARENT = 0x00000001;
+
+    // IID_IImageList — an HIMAGELIST is interchangeable with an IImageList*, so we take it as IntPtr.
+    public static Guid IID_IImageList = new("46EB5926-582E-4017-9FDF-E8998DAA0950");
+
+    [DllImport("shell32.dll")]
+    public static extern int SHGetImageList(int iImageList, ref Guid riid, out IntPtr ppv);
+
+    [DllImport("comctl32.dll", SetLastError = true)]
+    public static extern IntPtr ImageList_GetIcon(IntPtr himl, int i, uint flags);
 }
