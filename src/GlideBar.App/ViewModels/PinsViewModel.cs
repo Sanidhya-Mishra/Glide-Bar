@@ -1,31 +1,54 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GlideBar.App.Interop;
 using GlideBar.Core.Abstractions;
 using GlideBar.Core.Models;
 
 namespace GlideBar.App.ViewModels;
 
-/// <summary>One pinned tile. Exposes a glyph + open / reveal / unpin commands.</summary>
+/// <summary>One pinned tile. Exposes the target's real shell icon (with a glyph fallback) +
+/// open / reveal / unpin commands.</summary>
 public sealed partial class PinItemViewModel : ObservableObject
 {
     private readonly PinnedItem _model;
     private readonly ILauncher _launcher;
     private readonly Action<string> _remove;
 
+    /// <summary>The target's extracted shell icon; null until loaded (or if none is available).</summary>
+    [ObservableProperty] private ImageSource? _icon;
+
     public PinItemViewModel(PinnedItem model, ILauncher launcher, Action<string> remove)
     {
         _model = model;
         _launcher = launcher;
         _remove = remove;
+        LoadIconAsync();
     }
 
     public string Id => _model.Id;
     public string Name => _model.Name;
     public string Path => _model.Path;
     public PinnedKind Kind => _model.Kind;
+
+    /// <summary>True once a real shell icon was extracted (drives the glyph-vs-image fallback in XAML).</summary>
+    public bool HasIcon => Icon is not null;
+    partial void OnIconChanged(ImageSource? value) => OnPropertyChanged(nameof(HasIcon));
+
+    /// <summary>Extract the shell icon off the UI thread; the frozen result is assigned back on it.</summary>
+    private async void LoadIconAsync()
+    {
+        try
+        {
+            var path = _model.Path;
+            var icon = await Task.Run(() => ShellIcon.ForPath(path));
+            if (icon is not null) Icon = icon; // resumes on the UI thread (captured context)
+        }
+        catch { /* leave the glyph fallback in place */ }
+    }
 
     /// <summary>Single-letter fallback (used if the icon font is unavailable).</summary>
     public string Glyph => string.IsNullOrWhiteSpace(_model.Name) ? "?" : _model.Name.Trim()[..1].ToUpperInvariant();

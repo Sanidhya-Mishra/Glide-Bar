@@ -28,6 +28,10 @@
             <DataTrigger Binding="{Binding Kind}" Value="App">
                 <Setter Property="Data" Value="{StaticResource IconApp}"/>
             </DataTrigger>
+            <!-- Hide the generic glyph once the target's real shell icon has loaded. -->
+            <DataTrigger Binding="{Binding HasIcon}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
         </Style.Triggers>
     </Style>
 

@@ -99,7 +99,11 @@
                                                 <MenuItem Header="Unpin" Command="{Binding UnpinCommand}"/>
                                             </ContextMenu>
                                         </Button.ContextMenu>
-                                        <Path Style="{StaticResource PinIcon}"/>
+                                        <Grid>
+                                            <Path Style="{StaticResource PinIcon}"/>
+                                            <Image Source="{Binding Icon}" Width="24" Height="24"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        </Grid>
                                     </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -168,7 +172,11 @@
                                                 <MenuItem Header="Unpin" Command="{Binding UnpinCommand}"/>
                                             </ContextMenu>
                                         </Button.ContextMenu>
-                                        <Path Style="{StaticResource PinIcon}"/>
+                                        <Grid>
+                                            <Path Style="{StaticResource PinIcon}"/>
+                                            <Image Source="{Binding Icon}" Width="24" Height="24"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        </Grid>
                                     </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
