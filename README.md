@@ -9,10 +9,13 @@ notification/control hot bar.
 
 ## Updates
 
-**Latest: v1.1.0** — Pinned tiles now show each app/file's real Windows icon (no more generic
-placeholder), and shortcut (`.lnk`) icons render crisply without the shortcut-arrow overlay.
+**Latest: [v1.1.0](https://github.com/Sanidhya-Mishra/Glide-Bar/releases/latest)** — Pinned tiles now
+show each app/file's real Windows icon (no more generic placeholder), and shortcut (`.lnk`) icons
+render crisply without the shortcut-arrow overlay.
 
-See the full version history in [`CHANGELOG.md`](CHANGELOG.md).
+📦 **[Download the latest release](https://github.com/Sanidhya-Mishra/Glide-Bar/releases/latest)**
+(one-click installer or portable `.exe`) · 📋 [All releases](https://github.com/Sanidhya-Mishra/Glide-Bar/releases)
+· 📝 Full history in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Highlights
 - 🔍 Instant file / folder / app search → open or reveal
