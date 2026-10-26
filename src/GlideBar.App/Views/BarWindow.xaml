@@ -1,0 +1,437 @@
+<Window x:Class="GlideBar.App.Views.BarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:GlideBar.App.Controls"
+        xmlns:vm="clr-namespace:GlideBar.App.ViewModels"
+        d:DataContext="{d:DesignInstance Type=vm:BarViewModel}"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="GlideBar"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" ResizeMode="NoResize" AllowDrop="True"
+        SizeToContent="Manual" WindowStartupLocation="Manual"
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="ClearType"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="B2V"/>
+    </Window.Resources>
+
+    <!-- RootGrid margin = shadow halo. Surface is the visible bar; it sizes to its content and the
+         code-behind sizes/positions the window around it. -->
+    <Grid x:Name="RootGrid" Margin="30">
+        <Border x:Name="Surface"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="{DynamicResource SurfaceGradientBrush}"
+                BorderBrush="{DynamicResource SurfaceStrokeBrush}" BorderThickness="1.4"
+                CornerRadius="{DynamicResource PillCornerRadius}"
+                Padding="9" RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+                <ScaleTransform x:Name="SurfaceScale" ScaleX="1" ScaleY="1"/>
+            </Border.RenderTransform>
+            <Border.Effect>
+                <!-- Neon bloom (not a drop shadow): ShadowDepth 0 + accent colour. -->
+                <DropShadowEffect x:Name="SurfaceShadow" BlurRadius="26" ShadowDepth="0"
+                                  Opacity="0.55" Color="{DynamicResource SurfaceGlowColor}"/>
+            </Border.Effect>
+
+            <Grid>
+                <!-- ============ Collapsed handle / sliver ============ -->
+                <Border x:Name="Handle"
+                        Visibility="{Binding ShowHandle, Converter={StaticResource B2V}}"
+                        Background="{DynamicResource HandleBrush}"
+                        CornerRadius="5" Width="100" Height="8"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!-- ============ Expanded · HORIZONTAL ============ -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                            Visibility="{Binding ShowHorizontalContent, Converter={StaticResource B2V}}">
+
+                    <!-- Search (collapsed to a single icon; click expands it to a field) -->
+                    <Button x:Name="HSearchToggle" Style="{StaticResource GlideIconButton}" Width="34" Height="34"
+                            Command="{Binding Search.ToggleFieldCommand}" ToolTip="Search" VerticalAlignment="Center"
+                            Visibility="{Binding Search.IsFieldOpen, Converter={StaticResource InverseB2V}}">
+                        <Path Data="{StaticResource IconSearch}" Stretch="Uniform" Width="16" Height="16"
+                              Fill="{DynamicResource TextSecondaryBrush}"/>
+                    </Button>
+                    <Border x:Name="HSearchField" Background="{DynamicResource FieldBrush}" CornerRadius="9"
+                            Width="190" Height="34" Padding="9,0" VerticalAlignment="Center"
+                            Visibility="{Binding Search.IsFieldOpen, Converter={StaticResource B2V}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Path Grid.Column="0" Data="{StaticResource IconSearch}" Stretch="Uniform"
+                                  Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,7,0"
+                                  Fill="{DynamicResource TextSecondaryBrush}"/>
+                            <Grid Grid.Column="1">
+                                <TextBlock Text="Search files, apps..." VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                                           IsHitTestVisible="False"
+                                           Visibility="{Binding Search.ShowPlaceholder, Converter={StaticResource B2V}}"/>
+                                <TextBox x:Name="HSearchBox" Style="{StaticResource GlideSearchBox}"
+                                         Text="{Binding Search.Query, UpdateSourceTrigger=PropertyChanged}"
+                                         LostKeyboardFocus="HSearchBox_LostKeyboardFocus"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource GlideDividerV}"/>
+
+                    <!-- Pins -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ItemsControl ItemsSource="{Binding Pins.Pins}" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource GlideTileButton}"
+                                            Command="{Binding OpenCommand}" ToolTip="{Binding Name}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Open" Command="{Binding OpenCommand}"/>
+                                                <MenuItem Header="Open file location" Command="{Binding OpenLocationCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Unpin" Command="{Binding UnpinCommand}"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                        <Path Style="{StaticResource PinIcon}"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Style="{StaticResource GlideTileButton}" Command="{Binding ToggleAddCommand}"
+                                ToolTip="Add apps, files or folders (or drag one onto the bar)">
+                            <Path Data="{StaticResource IconAdd}" Stretch="Uniform" Width="15" Height="15" Fill="{DynamicResource TextSecondaryBrush}"/>
+                        </Button>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource GlideDividerV}"/>
+
+                    <!-- Vitals — fixed per-metric identity hues from the design palette
+                         (CPU=accent blue · RAM=orange · GPU=purple · TEMP=green). -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <controls:RingGauge Value="{Binding Vitals.CpuLoad}" DisplayValue="{Binding Vitals.CpuDisplay}"
+                                            Label="CPU" ArcBrush="{DynamicResource AccentBrush}" Margin="2,0"/>
+                        <controls:RingGauge Value="{Binding Vitals.RamUsedPercent}" DisplayValue="{Binding Vitals.RamDisplay}"
+                                            Label="RAM" ArcBrush="{DynamicResource WarnBrush}" Margin="2,0"
+                                            ToolTip="{Binding Vitals.RamDetail}"/>
+                        <controls:RingGauge Value="{Binding Vitals.GpuLoad}" DisplayValue="{Binding Vitals.GpuDisplay}"
+                                            Label="GPU" ArcBrush="{DynamicResource AccentSecondaryBrush}" Margin="2,0"/>
+                        <controls:RingGauge Value="{Binding Vitals.TempValue}" Maximum="100"
+                                            DisplayValue="{Binding Vitals.TempDisplay}" Label="TEMP"
+                                            ArcBrush="{DynamicResource GoodBrush}"
+                                            Margin="2,0"
+                                            Visibility="{Binding Vitals.TempAvailable, Converter={StaticResource B2V}}"/>
+                    </StackPanel>
+
+                    <!-- Settings -->
+                    <Button Style="{StaticResource GlideIconButton}" Command="{Binding ToggleSettingsCommand}"
+                            Margin="4,0,0,0" VerticalAlignment="Center" ToolTip="Settings">
+                        <Path Data="{StaticResource IconSettings}" Stretch="Uniform" Width="16" Height="16"
+                              Fill="{DynamicResource TextSecondaryBrush}"/>
+                    </Button>
+                </StackPanel>
+
+                <!-- ============ Expanded · VERTICAL ============ -->
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Center"
+                            Visibility="{Binding ShowVerticalContent, Converter={StaticResource B2V}}">
+
+                    <!-- Search icon (expands the field in the dock) -->
+                    <Button Style="{StaticResource GlideIconButton}" Command="{Binding Search.ToggleFieldCommand}"
+                            ToolTip="Search" Margin="0,2">
+                        <Path Data="{StaticResource IconSearch}" Stretch="Uniform" Width="16" Height="16"
+                              Fill="{DynamicResource TextSecondaryBrush}"/>
+                    </Button>
+
+                    <Border Style="{StaticResource GlideDividerH}" Width="42"/>
+
+                    <!-- Pins (column) -->
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <ItemsControl ItemsSource="{Binding Pins.Pins}" HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><StackPanel Orientation="Vertical"/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource GlideTileButton}"
+                                            Command="{Binding OpenCommand}" ToolTip="{Binding Name}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Open" Command="{Binding OpenCommand}"/>
+                                                <MenuItem Header="Open file location" Command="{Binding OpenLocationCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Unpin" Command="{Binding UnpinCommand}"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                        <Path Style="{StaticResource PinIcon}"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Style="{StaticResource GlideTileButton}" Command="{Binding ToggleAddCommand}"
+                                ToolTip="Add apps, files or folders (or drag one onto the bar)">
+                            <Path Data="{StaticResource IconAdd}" Stretch="Uniform" Width="15" Height="15" Fill="{DynamicResource TextSecondaryBrush}"/>
+                        </Button>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource GlideDividerH}" Width="42"/>
+
+                    <!-- Vitals (stacked) — same fixed per-metric identity hues as the horizontal bar. -->
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <controls:RingGauge Value="{Binding Vitals.CpuLoad}" DisplayValue="{Binding Vitals.CpuDisplay}"
+                                            Label="CPU" ArcBrush="{DynamicResource AccentBrush}" Margin="0,2"/>
+                        <controls:RingGauge Value="{Binding Vitals.RamUsedPercent}" DisplayValue="{Binding Vitals.RamDisplay}"
+                                            Label="RAM" ArcBrush="{DynamicResource WarnBrush}" Margin="0,2"/>
+                        <controls:RingGauge Value="{Binding Vitals.GpuLoad}" DisplayValue="{Binding Vitals.GpuDisplay}"
+                                            Label="GPU" ArcBrush="{DynamicResource AccentSecondaryBrush}" Margin="0,2"/>
+                        <controls:RingGauge Value="{Binding Vitals.TempValue}" Maximum="100"
+                                            DisplayValue="{Binding Vitals.TempDisplay}" Label="TEMP"
+                                            ArcBrush="{DynamicResource GoodBrush}" Margin="0,2"
+                                            Visibility="{Binding Vitals.TempAvailable, Converter={StaticResource B2V}}"/>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource GlideDividerH}" Width="42"/>
+
+                    <Button Style="{StaticResource GlideIconButton}" Command="{Binding ToggleSettingsCommand}"
+                            ToolTip="Settings" Margin="0,2">
+                        <Path Data="{StaticResource IconSettings}" Stretch="Uniform" Width="16" Height="16"
+                              Fill="{DynamicResource TextSecondaryBrush}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============ Search results popup ============ -->
+        <Popup x:Name="ResultsPopup" PlacementTarget="{Binding ElementName=HSearchField}"
+               Placement="Bottom" AllowsTransparency="True" StaysOpen="True"
+               HorizontalOffset="-10" VerticalOffset="-1">
+            <Popup.IsOpen>
+                <MultiBinding Converter="{StaticResource AllTrue}" Mode="OneWay">
+                    <Binding Path="Search.HasResults"/>
+                    <Binding Path="IsHorizontal"/>
+                </MultiBinding>
+            </Popup.IsOpen>
+            <Border Background="{DynamicResource SurfaceSolidBrush}" CornerRadius="13" Padding="6"
+                    Width="366" MaxHeight="366" Margin="10"
+                    BorderBrush="#59FFFFFF" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="22" ShadowDepth="0" Opacity="0.5" Color="#000000"/>
+                </Border.Effect>
+                <ListBox ItemsSource="{Binding Search.Results}" Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ItemContainerStyle="{StaticResource SearchResultItemStyle}"
+                         ItemTemplate="{StaticResource SearchResultTemplate}"/>
+            </Border>
+        </Popup>
+
+        <!-- ============ Settings flyout ============ -->
+        <Popup x:Name="SettingsPopup" PlacementTarget="{Binding ElementName=Surface}"
+               Placement="Bottom" AllowsTransparency="True" StaysOpen="True"
+               IsOpen="{Binding IsSettingsOpen, Mode=TwoWay}" HorizontalOffset="0" VerticalOffset="6">
+            <Border Background="{DynamicResource SurfaceSolidBrush}" CornerRadius="14" Padding="14"
+                    BorderBrush="#33FFFFFF" BorderThickness="1" Width="262" Margin="10">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="22" ShadowDepth="0" Opacity="0.5" Color="#000000"/>
+                </Border.Effect>
+                <StackPanel DataContext="{Binding SettingsPanel}">
+                    <TextBlock Text="Settings" Foreground="{DynamicResource TextPrimaryBrush}"
+                               FontSize="14" FontWeight="SemiBold" Margin="2,0,0,10"/>
+
+                    <!-- Theme -->
+                    <TextBlock Text="Theme" Style="{StaticResource SettingLabel}" Margin="2,0,0,5"/>
+                    <Border Background="{DynamicResource TileBrush}" CornerRadius="9" Padding="2" Margin="0,0,0,12">
+                        <UniformGrid Rows="1" Columns="3">
+                            <Button Content="System" Style="{StaticResource SegBtn}"
+                                    Command="{Binding SetThemeCommand}" CommandParameter="system" Tag="{Binding IsThemeSystem}"/>
+                            <Button Content="Light" Style="{StaticResource SegBtn}"
+                                    Command="{Binding SetThemeCommand}" CommandParameter="light" Tag="{Binding IsThemeLight}"/>
+                            <Button Content="Dark" Style="{StaticResource SegBtn}"
+                                    Command="{Binding SetThemeCommand}" CommandParameter="dark" Tag="{Binding IsThemeDark}"/>
+                        </UniformGrid>
+                    </Border>
+
+                    <!-- Update rate -->
+                    <TextBlock Text="Update rate" Style="{StaticResource SettingLabel}" Margin="2,0,0,5"/>
+                    <Border Background="{DynamicResource TileBrush}" CornerRadius="9" Padding="2" Margin="0,0,0,12">
+                        <UniformGrid Rows="1" Columns="3">
+                            <Button Content="0.5s" Style="{StaticResource SegBtn}"
+                                    Command="{Binding SetRateCommand}" CommandParameter="500" Tag="{Binding IsRateFast}"/>
+                            <Button Content="1s" Style="{StaticResource SegBtn}"
+                                    Command="{Binding SetRateCommand}" CommandParameter="1000" Tag="{Binding IsRateNormal}"/>
+                            <Button Content="2s" Style="{StaticResource SegBtn}"
+                                    Command="{Binding SetRateCommand}" CommandParameter="2000" Tag="{Binding IsRateSlow}"/>
+                        </UniformGrid>
+                    </Border>
+
+                    <!-- Toggles -->
+                    <Grid Margin="2,2,2,10">
+                        <TextBlock Text="Start with Windows" Style="{StaticResource SettingLabel}" HorizontalAlignment="Left"/>
+                        <ToggleButton Style="{StaticResource SettingToggle}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding AutostartEnabled}"/>
+                    </Grid>
+                    <Grid Margin="2,2,2,2">
+                        <TextBlock Text="Show temperatures" Style="{StaticResource SettingLabel}" HorizontalAlignment="Left"/>
+                        <ToggleButton Style="{StaticResource SettingToggle}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding TemperaturesEnabled}"/>
+                    </Grid>
+                    <TextBlock Text="{Binding TempStatus}" Foreground="{DynamicResource WarnBrush}"
+                               FontSize="10.5" TextWrapping="Wrap" Margin="2,3,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TempStatus}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,12"/>
+                    <Button Content="Quit GlideBar" Style="{StaticResource QuitBtn}" Command="{Binding QuitCommand}"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- ============ Add panel (installed-app picker + file/folder) ============ -->
+        <Popup x:Name="AddPopup" PlacementTarget="{Binding ElementName=Surface}"
+               Placement="Custom" AllowsTransparency="True" StaysOpen="True"
+               IsOpen="{Binding IsAddOpen, Mode=TwoWay}" Opened="AddPopup_Opened">
+            <Border x:Name="AddPanel" Background="{DynamicResource SurfaceGradientBrush}" CornerRadius="16" Padding="14"
+                    BorderBrush="{DynamicResource SurfaceStrokeBrush}" BorderThickness="1.2" MinWidth="316" Margin="16"
+                    DataContext="{Binding AppPicker}">
+                <Border.Effect>
+                    <!-- Contained bloom: blur < margin so the halo never bleeds past the bar's width. -->
+                    <DropShadowEffect BlurRadius="14" ShadowDepth="0" Opacity="0.4"
+                                      Color="{DynamicResource SurfaceGlowColor}"/>
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Header -->
+                    <Grid Margin="2,0,0,10">
+                        <TextBlock Text="Add to bar" Foreground="{DynamicResource TextPrimaryBrush}"
+                                   FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button Style="{StaticResource GlideIconButton}" Command="{Binding CancelCommand}"
+                                HorizontalAlignment="Right" Width="26" Height="26" ToolTip="Close"
+                                Content="&#xE711;"/>
+                    </Grid>
+
+                    <!-- Filter -->
+                    <Border Background="{DynamicResource FieldBrush}" CornerRadius="9" Height="34" Padding="9,0" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Path Grid.Column="0" Data="{StaticResource IconSearch}" Width="14" Height="14"
+                                  Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,7,0"
+                                  Fill="{DynamicResource TextSecondaryBrush}"/>
+                            <Grid Grid.Column="1">
+                                <TextBlock Text="Filter apps..." VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Filter}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBox Style="{StaticResource GlideSearchBox}"
+                                         Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Loading hint -->
+                    <TextBlock Text="Loading apps…" Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontSize="12" Margin="2,2,0,8"
+                               Visibility="{Binding IsLoading, Converter={StaticResource B2V}}"/>
+
+                    <!-- App / file tiles -->
+                    <ScrollViewer MaxHeight="286" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding EntriesView}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource AppTileButton}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,12"/>
+
+                    <!-- Actions -->
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Button Content="Add file…" Style="{StaticResource AddSecondaryBtn}"
+                                    Command="{Binding AddFilesCommand}" Margin="0,0,6,0"/>
+                            <Button Content="Add folder…" Style="{StaticResource AddSecondaryBtn}"
+                                    Command="{Binding AddFoldersCommand}"/>
+                        </StackPanel>
+                        <Button Content="Done" Style="{StaticResource AddPrimaryBtn}"
+                                Command="{Binding DoneCommand}" HorizontalAlignment="Right"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- ============ Vertical-dock search flyout (input + results) ============ -->
+        <Popup x:Name="VSearchPopup" PlacementTarget="{Binding ElementName=Surface}"
+               Placement="Left" AllowsTransparency="True" StaysOpen="True"
+               HorizontalOffset="-6" Opened="VSearchPopup_Opened">
+            <Popup.IsOpen>
+                <MultiBinding Converter="{StaticResource AllTrue}" Mode="OneWay">
+                    <Binding Path="IsVertical"/>
+                    <Binding Path="IsExpanded"/>
+                    <Binding Path="Search.IsFieldOpen"/>
+                </MultiBinding>
+            </Popup.IsOpen>
+            <Border Background="{DynamicResource SurfaceSolidBrush}" CornerRadius="12" Padding="8"
+                    Width="288" Margin="10" BorderBrush="#33FFFFFF" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.45" Color="#000000"/>
+                </Border.Effect>
+                <StackPanel>
+                    <Border Background="{DynamicResource FieldBrush}" CornerRadius="9" Height="34" Padding="9,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Path Grid.Column="0" Data="{StaticResource IconSearch}" Width="15" Height="15"
+                                  Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,7,0"
+                                  Fill="{DynamicResource TextSecondaryBrush}"/>
+                            <Grid Grid.Column="1">
+                                <TextBlock Text="Search files, apps..." VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                                           IsHitTestVisible="False"
+                                           Visibility="{Binding Search.ShowPlaceholder, Converter={StaticResource B2V}}"/>
+                                <TextBox x:Name="VSearchBox" Style="{StaticResource GlideSearchBox}"
+                                         Text="{Binding Search.Query, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                    <ListBox ItemsSource="{Binding Search.Results}" Background="Transparent" BorderThickness="0"
+                             MaxHeight="340" Margin="0,6,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Visibility="{Binding Search.HasResults, Converter={StaticResource B2V}}"
+                             ItemContainerStyle="{StaticResource SearchResultItemStyle}"
+                             ItemTemplate="{StaticResource SearchResultTemplate}"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</Window>

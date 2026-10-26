@@ -1,0 +1,14 @@
+<Application x:Class="GlideBar.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:GlideBar.App">
+    <!-- No StartupUri: startup is driven by App.OnStartup (DI composition root).
+         ThemeManager inserts the active Tokens.*.xaml ahead of these at runtime. -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GlideBar.Core\GlideBar.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Tier B temperatures (opt-in, elevation-aware). -->
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <!-- DI registration (AddGlideBarHardwareMonitor). -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+    <!-- Tier A GPU load / GPU memory performance counters. -->
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.13" />
+  </ItemGroup>
+
+</Project>

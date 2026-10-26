@@ -1,0 +1,57 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============ GlideBar design tokens — DARK ============ -->
+
+    <!-- Surfaces (translucent so the DWM acrylic backdrop shows through) -->
+    <!-- Hue #141824 matches the design gallery bar-bg (blue-black); alpha kept opaque since blur is off. -->
+    <Color x:Key="SurfaceColor">#D1141824</Color>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
+    <SolidColorBrush x:Key="SurfaceSolidBrush" Color="#F2141824"/>
+
+    <!-- Futuristic bar: indigo→navy→violet diagonal fill (reads as colour, not flat black). -->
+    <LinearGradientBrush x:Key="SurfaceGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#EC222C58" Offset="0"/>
+        <GradientStop Color="#EC161B38" Offset="0.52"/>
+        <GradientStop Color="#EC271E4C" Offset="1"/>
+    </LinearGradientBrush>
+    <!-- Edge-light: luminous cyan → periwinkle → violet rim stroke. -->
+    <LinearGradientBrush x:Key="SurfaceStrokeBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#C25BE6FA" Offset="0"/>
+        <GradientStop Color="#C27C9CFF" Offset="0.5"/>
+        <GradientStop Color="#C2A77BF8" Offset="1"/>
+    </LinearGradientBrush>
+    <!-- Neon bloom colour for the outer glow. -->
+    <Color x:Key="SurfaceGlowColor">#5B9CFA</Color>
+    <SolidColorBrush x:Key="HandleBrush" Color="#8CFFFFFF"/>
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#3DFFFFFF"/>
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#73FFFFFF"/>
+
+    <!-- Tiles / fields -->
+    <SolidColorBrush x:Key="TileBrush" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="TileHoverBrush" Color="#33FFFFFF"/>
+    <SolidColorBrush x:Key="FieldBrush" Color="#18FFFFFF"/>
+
+    <!-- Text (design tokens ink / muted) -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E9EDF6"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#98A2B5"/>
+    <SolidColorBrush x:Key="DividerBrush" Color="#1FFFFFFF"/>
+
+    <!-- Accent + semantic -->
+    <Color x:Key="AccentColor">#5B7CFA</Color>
+    <SolidColorBrush x:Key="AccentBrush" Color="#5B7CFA"/>
+    <SolidColorBrush x:Key="AccentSecondaryBrush" Color="#8A5CF6"/>
+    <SolidColorBrush x:Key="GoodBrush" Color="#1FB866"/>
+    <SolidColorBrush x:Key="WarnBrush" Color="#F0A020"/>
+    <SolidColorBrush x:Key="CriticalBrush" Color="#EF4B4B"/>
+    <SolidColorBrush x:Key="GaugeTrackBrush" Color="#1FFFFFFF"/>
+
+    <!-- Shadow colour for the elevated surface -->
+    <Color x:Key="ShadowColor">#000000</Color>
+
+    <!-- Geometry -->
+    <CornerRadius x:Key="PillCornerRadius">26</CornerRadius>
+    <CornerRadius x:Key="DockCornerRadius">15</CornerRadius>
+    <CornerRadius x:Key="TileCornerRadius">10</CornerRadius>
+
+</ResourceDictionary>

@@ -1,0 +1,16 @@
+# Normalize line endings: let Git decide text vs binary, store text as LF.
+* text=auto
+
+# Windows-centric source stays CRLF in the working tree.
+*.cs      text eol=crlf
+*.xaml    text eol=crlf
+*.csproj  text eol=crlf
+*.props   text eol=crlf
+*.manifest text eol=crlf
+*.iss     text eol=crlf
+
+# Binary assets.
+*.png binary
+*.ico binary
+*.zip binary
+*.exe binary
