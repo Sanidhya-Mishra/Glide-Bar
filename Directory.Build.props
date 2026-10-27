@@ -1,8 +1,8 @@
 <Project>
 
-  <!-- Keep the build host's absolute path (including the "Claude" folder name) out of
-       compiled assemblies and PDBs. PathMap rewrites the repo-root prefix to a neutral
-       token, and Deterministic makes the output path-independent. -->
+  <!-- Keep the build host's absolute path out of compiled assemblies and PDBs.
+       PathMap rewrites the repo-root prefix to a neutral token, and Deterministic
+       makes the output path-independent. -->
   <PropertyGroup>
     <Deterministic>true</Deterministic>
     <PathMap>$(MSBuildThisFileDirectory)=./</PathMap>
